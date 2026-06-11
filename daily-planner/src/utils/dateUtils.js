@@ -81,6 +81,17 @@ export function dateRange(startDate, endDate) {
   return result
 }
 
+export function addDays(dateStr, n) {
+  const d = toNoonUTC(dateStr)
+  d.setUTCDate(d.getUTCDate() + n)
+  return d.toISOString().slice(0, 10)
+}
+
+export function formatWeekRange(monday, sunday) {
+  const fmt = (d) => new Date(d + 'T12:00:00Z').toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'UTC' })
+  return `${fmt(monday)} – ${fmt(sunday)}`
+}
+
 export function weekBounds(dateStr) {
   const d = toNoonUTC(dateStr)
   // getUTCDay(): 0 = Sunday … 6 = Saturday; ISO week starts Monday (1).

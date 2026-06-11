@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useAddGoal } from '../../hooks/useGoals.js'
 import { useAddRecurring } from '../../hooks/useRecurring.js'
 import { validateTitle, validateTimeSlot } from '../../utils/validators.js'
+import { MODE_LABELS } from '../../utils/labels.js'
 
 const COLORS = ['purple','teal','amber','blue','coral','green']
 const HEX = { purple:'#a855f7',teal:'#14b8a6',amber:'#f59e0b',blue:'#3b82f6',coral:'#f97316',green:'#22c55e' }
@@ -73,7 +74,7 @@ export function AddGoalFlow({ onDone }) {
           <input value={t.title} onChange={(e) => upd(i, { title: e.target.value })} placeholder={`Task ${i + 1} title`} className={`${inp} text-sm`} />
           {errors[`t${i}`] && <p className="text-red-400 text-xs">{errors[`t${i}`]}</p>}
           <label className="flex items-center gap-2 text-xs text-gray-400 cursor-pointer">
-            <input type="checkbox" checked={t.structured} onChange={(e) => upd(i, { structured: e.target.checked })} /> Structured
+            <input type="checkbox" checked={t.structured} onChange={(e) => upd(i, { structured: e.target.checked })} /> {MODE_LABELS.structured}
           </label>
           {t.structured && <div className="flex gap-2">
             <input value={t.start} onChange={(e) => upd(i, { start: e.target.value })} placeholder="09:00" className={`${inp} text-xs w-20`} />

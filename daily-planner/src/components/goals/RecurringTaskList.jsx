@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useRecurring, useAddRecurring, useUpdateRecurring, useDeleteRecurring } from '../../hooks/useRecurring.js'
 import { validateTitle, validateTimeSlot } from '../../utils/validators.js'
+import { MODE_LABELS } from '../../utils/labels.js'
 
 const inp = 'bg-gray-700 text-white rounded px-2 py-1 outline-none focus:ring-1 focus:ring-purple-500'
 
@@ -36,7 +37,7 @@ function RecurringRow({ task }) {
       <input value={title} onChange={(e) => setTitle(e.target.value)} className={`${inp} text-sm`} />
       {err.title && <p className="text-red-400 text-xs">{err.title}</p>}
       <label className="flex items-center gap-2 text-xs text-gray-400 cursor-pointer">
-        <input type="checkbox" checked={structured} onChange={(e) => setStructured(e.target.checked)} /> Structured
+        <input type="checkbox" checked={structured} onChange={(e) => setStructured(e.target.checked)} /> {MODE_LABELS.structured}
       </label>
       {structured && <div className="flex gap-2">
         <input value={start} onChange={(e) => setStart(e.target.value)} placeholder="09:00" className={`${inp} text-xs w-20`} />

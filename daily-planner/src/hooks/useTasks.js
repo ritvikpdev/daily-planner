@@ -3,11 +3,18 @@ import { supabase } from '../lib/supabase.js'
 import { todayLocal, previousDay } from '../utils/dateUtils.js'
 
 const cutoffDate = (tz) => previousDay(previousDay(previousDay(todayLocal(tz))))
-async function generateRecurring(date, tasks) {
+
+function createdAtLocalDate(isoString, tz) {
+  return new Intl.DateTimeFormat('en-CA', { timeZone: tz }).format(new Date(isoString))
+}
+
+async function generateRecurring(date, tasks, tz) {
   const { data: { user } } = await supabase.auth.getUser()
   const { data: tpl = [] } = await supabase.from('recurring_tasks').select('*').eq('user_id', user.id).eq('active', true)
   const seen = new Set(tasks.map((t) => t.recurring_id).filter(Boolean))
-  const missing = tpl.filter((t) => !seen.has(t.id))
+  // Only generate an instance for a template if the template existed on `date`
+  // (i.e. its created_at local date is on or before `date`).
+  const missing = tpl.filter((t) => !seen.has(t.id) && createdAtLocalDate(t.created_at, tz) <= date)
   if (!missing.length) return tasks
   const { data: added = [] } = await supabase.from('tasks').insert(missing.map((t) => ({
     user_id: user.id, goal_id: t.goal_id, title: t.title, mode: t.default_mode,
@@ -23,7 +30,7 @@ export function useTasksForDate(date, tz) {
     queryFn: async () => {
       const { data: tasks, error } = await supabase.from('tasks').select('*').eq('planned_date', date).eq('archived', false)
       if (error) throw error
-      if (date <= todayLocal(tz)) return generateRecurring(date, tasks ?? [])
+      if (date <= todayLocal(tz)) return generateRecurring(date, tasks ?? [], tz)
       return tasks ?? []
     },
     enabled: Boolean(date),
