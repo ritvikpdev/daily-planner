@@ -5,6 +5,8 @@ import { Toaster } from './components/shared/Toast.jsx'
 import { GoalsView } from './components/goals/GoalsView.jsx'
 import { TodayView } from './components/today/TodayView.jsx'
 import { PlanView } from './components/plan/PlanView.jsx'
+import { ReviewView } from './components/review/ReviewView.jsx'
+import { ProgressView } from './components/progress/ProgressView.jsx'
 
 const TABS = ['Today', 'Plan', 'Goals', 'Progress', 'Review']
 
@@ -14,6 +16,8 @@ function TabView({ tab }) {
   if (tab === 'Today') return <TodayView />
   if (tab === 'Plan') return <PlanView />
   if (tab === 'Goals') return <GoalsView />
+  if (tab === 'Review') return <ReviewView />
+  if (tab === 'Progress') return <ProgressView />
   return <div className="p-4 text-white">{tab}</div>
 }
 
