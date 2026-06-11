@@ -1,0 +1,18 @@
+const COLOR_MAP = {
+  purple: 'border-purple-500 text-purple-300',
+  teal:   'border-teal-500 text-teal-300',
+  amber:  'border-amber-500 text-amber-300',
+  blue:   'border-blue-500 text-blue-300',
+  coral:  'border-orange-500 text-orange-300',
+  green:  'border-green-500 text-green-300',
+}
+
+export function StreakChip({ count, color = 'purple' }) {
+  const cls = COLOR_MAP[color] ?? COLOR_MAP.purple
+  return (
+    <span className={`inline-flex items-center gap-1 border rounded-full px-2 py-0.5 text-xs ${cls}`}>
+      <span style={{ fontFamily: "'JetBrains Mono', monospace" }} className="font-medium">{count}</span>
+      <span className="text-gray-400">day streak</span>
+    </span>
+  )
+}
