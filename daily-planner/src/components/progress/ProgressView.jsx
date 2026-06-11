@@ -16,19 +16,17 @@ export function ProgressView() {
   const tz = profile?.timezone ?? 'UTC'
   const today = todayLocal(tz)
   const { data: streaks = {} } = useStreaks(tz)
-  const { data: allTasks = [], isLoading } = useAllTasks()
+  const { data: allTasks = [], isLoading, isError: tasksError, refetch: refetchTasks } = useAllTasks()
   const active = goals.filter((g) => g.status === 'active')
   const completed = goals.filter((g) => g.status === 'completed' || g.status === 'archived')
   const { monday, sunday } = weekBounds(today)
 
-  if (isLoading) return (
-    <div className="p-4 flex flex-col gap-3 max-w-2xl mx-auto">
-      {[1, 2, 3].map((i) => <SkeletonRow key={i} height="40px" />)}
-    </div>
-  )
+  if (isLoading) return <div className="p-4 flex flex-col gap-3 max-w-2xl mx-auto">{[1,2,3].map((i) => <SkeletonRow key={i} height="40px" />)}</div>
+  if (tasksError) return <div className="p-4 max-w-2xl mx-auto"><p className="text-red-400 text-sm">Couldn't load your progress. <button onClick={refetchTasks} className="underline ml-1">Retry</button></p></div>
 
   return (
     <div className="p-4 flex flex-col gap-6 max-w-2xl mx-auto">
+      {active.length > 0 && allTasks.length === 0 && <p className="text-gray-600 text-sm text-center py-4">Complete some tasks to see your progress.</p>}
       <div className={sec}>
         <p className={sh}>This week</p>
         {active.map((g) => {

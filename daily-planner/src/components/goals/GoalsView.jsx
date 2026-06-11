@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useGoals } from '../../hooks/useGoals.js'
 import { GoalCard } from './GoalCard.jsx'
 import { AddGoalFlow } from './AddGoalFlow.jsx'
@@ -6,20 +6,20 @@ import { EmptyState } from '../shared/EmptyState.jsx'
 import { SkeletonRow } from '../shared/SkeletonRow.jsx'
 
 export function GoalsView() {
-  const { data: goals = [], isLoading } = useGoals()
+  const { data: goals = [], isLoading, isError, refetch } = useGoals()
   const [adding, setAdding] = useState(false)
   const [completedOpen, setCompletedOpen] = useState(false)
+  const autoOpened = useRef(false)
+
+  useEffect(() => {
+    if (!isLoading && goals.length === 0 && !autoOpened.current) { autoOpened.current = true; setAdding(true) }
+  }, [isLoading, goals.length])
 
   const active = goals.filter((g) => g.status === 'active' || g.status === 'paused')
   const completed = goals.filter((g) => g.status === 'completed')
 
-  if (isLoading) return (
-    <div className="p-4 flex flex-col gap-3">
-      <SkeletonRow height="72px" />
-      <SkeletonRow height="72px" />
-      <SkeletonRow height="72px" />
-    </div>
-  )
+  if (isLoading) return <div className="p-4 flex flex-col gap-3">{[1,2,3].map((i) => <SkeletonRow key={i} height="72px" />)}</div>
+  if (isError) return <div className="p-4"><p className="text-red-400 text-sm">Couldn't load your goals. <button onClick={refetch} className="underline">Retry</button></p></div>
 
   return (
     <div className="p-4 flex flex-col gap-4 max-w-2xl mx-auto">
@@ -33,6 +33,7 @@ export function GoalsView() {
         )}
       </div>
 
+      {adding && goals.length === 0 && <p className="text-gray-400 text-sm">Welcome! Start by adding your first goal.</p>}
       {adding && <AddGoalFlow onDone={() => setAdding(false)} />}
 
       {!adding && active.length === 0 && (

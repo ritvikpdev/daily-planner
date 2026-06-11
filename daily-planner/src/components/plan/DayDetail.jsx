@@ -60,12 +60,13 @@ function GoalBlock({ goal, date, tz }) {
 }
 
 export function DayDetail({ date, tz, goals, goalFilter }) {
-  const { data: all = [] } = useTasksForDate(date, tz)
+  const { data: all = [], isLoading } = useTasksForDate(date, tz)
   const active = goals.filter((g) => g.status === 'active' && (!goalFilter || g.id === goalFilter))
   const structured = all.filter((t) => t.mode === 'structured' && t.start_time && t.end_time && (!goalFilter || t.goal_id === goalFilter))
   return (
     <div className="flex flex-col gap-3">
       {active.map((g) => <GoalBlock key={g.id} goal={g} date={date} tz={tz} />)}
+      {!isLoading && active.length > 0 && all.length === 0 && <p className="text-gray-600 text-sm text-center py-2">Nothing planned. Add a task above.</p>}
       {structured.length > 0 && (
         <div className="rounded-xl border border-gray-700/50 bg-gray-800/60 p-3 overflow-y-auto" style={{ maxHeight: 480 }}>
           <p className="text-gray-500 text-xs mb-3">Timeline</p>

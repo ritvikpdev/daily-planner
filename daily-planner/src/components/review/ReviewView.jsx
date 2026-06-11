@@ -9,13 +9,13 @@ import { todayLocal, addDays } from '../../utils/dateUtils.js'
 const ta = 'w-full bg-gray-800 border border-gray-700/50 text-gray-100 text-sm rounded-lg px-3 py-2 outline-none focus:ring-1 focus:ring-purple-500 resize-none placeholder:text-gray-600'
 const lbl = 'text-xs text-gray-500 font-medium uppercase tracking-wide'
 
-export function ReviewView() {
+export function ReviewView({ initialDate }) {
   const { data: profile } = useProfile()
   const { data: goals = [] } = useGoals()
   const { showToast } = useToast()
   const tz = profile?.timezone ?? 'UTC'
   const today = todayLocal(tz)
-  const [date, setDate] = useState(today)
+  const [date, setDate] = useState(initialDate ?? today)
   const { data: log, isLoading } = useLog(date)
   const { mutate: upsert, isPending } = useUpsertLog()
   const active = goals.filter((g) => g.status === 'active')

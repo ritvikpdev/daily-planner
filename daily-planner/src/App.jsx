@@ -1,30 +1,47 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { supabase } from './lib/supabase.js'
 import { useArchiveOldTasks } from './hooks/useTasks.js'
+import { useGoals } from './hooks/useGoals.js'
 import { Toaster } from './components/shared/Toast.jsx'
 import { GoalsView } from './components/goals/GoalsView.jsx'
 import { TodayView } from './components/today/TodayView.jsx'
 import { PlanView } from './components/plan/PlanView.jsx'
 import { ReviewView } from './components/review/ReviewView.jsx'
 import { ProgressView } from './components/progress/ProgressView.jsx'
+import { SettingsView } from './components/settings/SettingsView.jsx'
+import { useProfile } from './hooks/useProfile.js'
+import { useAppOpenCheck } from './hooks/useAppOpenCheck.js'
 
-const TABS = ['Today', 'Plan', 'Goals', 'Progress', 'Review']
+const TABS = ['Today', 'Plan', 'Goals', 'Progress', 'Review', 'Settings']
 
-const NAV_ICONS = { Today: '◉', Plan: '⊞', Goals: '⊙', Progress: '▦', Review: '≡' }
+const NAV_ICONS = { Today: '◉', Plan: '⊞', Goals: '⊙', Progress: '▦', Review: '≡', Settings: '⚙' }
 
-function TabView({ tab }) {
-  if (tab === 'Today') return <TodayView />
+function TabView({ tab, missedDays, lastActivityDate, onGoToReview, reviewDate, onNavigate }) {
+  if (tab === 'Today') return <TodayView missedDays={missedDays} lastActivityDate={lastActivityDate} onGoToReview={onGoToReview} onNavigate={onNavigate} />
   if (tab === 'Plan') return <PlanView />
   if (tab === 'Goals') return <GoalsView />
-  if (tab === 'Review') return <ReviewView />
+  if (tab === 'Review') return <ReviewView initialDate={reviewDate} />
   if (tab === 'Progress') return <ProgressView />
+  if (tab === 'Settings') return <SettingsView />
   return <div className="p-4 text-white">{tab}</div>
 }
 
 function MainApp() {
   const [active, setActive] = useState('Today')
+  const [reviewDate, setReviewDate] = useState(null)
   const { mutate: archiveOld } = useArchiveOldTasks()
+  const { data: profile } = useProfile()
+  const tz = profile?.timezone ?? 'UTC'
+  const { data: appCheck = {} } = useAppOpenCheck(tz)
+  const { missedDays = 0, lastActivityDate } = appCheck
+  const { data: goals = [], isLoading: goalsLoading } = useGoals()
+  const didOnboard = useRef(false)
   useEffect(() => { archiveOld('UTC') }, [])
+  useEffect(() => {
+    if (!goalsLoading && goals.length === 0 && !didOnboard.current) { didOnboard.current = true; setActive('Goals') }
+  }, [goalsLoading, goals.length])
+
+  function goToReview(date) { setReviewDate(date); setActive('Review') }
 
   return (
     <div className="flex h-screen bg-gray-900">
@@ -42,7 +59,8 @@ function MainApp() {
 
       {/* Content */}
       <main className="flex-1 overflow-y-auto pb-16 md:pb-0">
-        <TabView tab={active} />
+        <TabView tab={active} missedDays={missedDays} lastActivityDate={lastActivityDate}
+          onGoToReview={goToReview} reviewDate={reviewDate} onNavigate={setActive} />
       </main>
 
       {/* Mobile bottom bar */}

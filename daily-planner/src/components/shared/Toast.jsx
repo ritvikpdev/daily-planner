@@ -2,6 +2,8 @@ import { useState, useCallback, useRef } from 'react'
 
 let _showToast = null
 
+export const showToastGlobal = (msg, type = 'error') => _showToast?.(msg, type)
+
 export function useToast() {
   const showToast = useCallback((message, type = 'success') => {
     _showToast?.(message, type)
