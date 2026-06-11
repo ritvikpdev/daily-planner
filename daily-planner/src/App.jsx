@@ -2,12 +2,14 @@ import { useEffect, useState } from 'react'
 import { supabase } from './lib/supabase.js'
 import { useArchiveOldTasks } from './hooks/useTasks.js'
 import { Toaster } from './components/shared/Toast.jsx'
+import { GoalsView } from './components/goals/GoalsView.jsx'
 
 const TABS = ['Today', 'Plan', 'Goals', 'Progress', 'Review']
 
 const NAV_ICONS = { Today: '◉', Plan: '⊞', Goals: '⊙', Progress: '▦', Review: '≡' }
 
 function TabView({ tab }) {
+  if (tab === 'Goals') return <GoalsView />
   return <div className="p-4 text-white">{tab}</div>
 }
 
