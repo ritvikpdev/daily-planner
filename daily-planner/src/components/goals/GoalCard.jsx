@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useUpdateGoal, useSetGoalStatus } from '../../hooks/useGoals.js'
 import { validateTitle } from '../../utils/validators.js'
-import { daysBetween, todayLocal } from '../../utils/dateUtils.js'
+import { daysBetween, todayLocal, localTz } from '../../utils/dateUtils.js'
 import { RecurringTaskList } from './RecurringTaskList.jsx'
 
 const BORDER = { purple:'border-purple-500',teal:'border-teal-500',amber:'border-amber-500',blue:'border-blue-500',coral:'border-orange-500',green:'border-green-500' }
@@ -19,7 +19,7 @@ export function GoalCard({ goal }) {
   const [note, setNote] = useState('')
   const [titleErr, setTitleErr] = useState(null)
   const border = BORDER[goal.color] ?? BORDER.purple
-  const daysLeft = goal.target_date ? daysBetween(todayLocal('UTC'), goal.target_date) : null
+  const daysLeft = goal.target_date ? daysBetween(todayLocal(localTz()), goal.target_date) : null
 
   function saveEdit() {
     const v = validateTitle(title)

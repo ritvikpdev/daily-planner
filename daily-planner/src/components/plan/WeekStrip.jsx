@@ -12,7 +12,10 @@ function DayCell({ date, today, goals, goalFilter, tz, onDrillDown }) {
   const [adding, setAdding] = useState(false)
   const [newTitle, setNewTitle] = useState('')
 
-  const tasks = goalFilter ? all.filter((t) => t.goal_id === goalFilter) : all
+  const tasks = all.filter((t) =>
+    (!goalFilter || t.goal_id === goalFilter) &&
+    goals.find((g) => g.id === t.goal_id)?.status === 'active'
+  )
   const isToday = date === today
   const firstGoalId = goalFilter ?? goals.find((g) => g.status === 'active')?.id
   const dot = (goalId) => DOT[goals.find((g) => g.id === goalId)?.color] ?? DOT.purple

@@ -11,6 +11,7 @@ import { ProgressView } from './components/progress/ProgressView.jsx'
 import { SettingsView } from './components/settings/SettingsView.jsx'
 import { useProfile } from './hooks/useProfile.js'
 import { useAppOpenCheck } from './hooks/useAppOpenCheck.js'
+import { localTz } from './utils/dateUtils.js'
 
 const TABS = ['Today', 'Plan', 'Goals', 'Progress', 'Review', 'Settings']
 
@@ -31,7 +32,7 @@ function MainApp() {
   const [reviewDate, setReviewDate] = useState(null)
   const { mutate: archiveOld } = useArchiveOldTasks()
   const { data: profile } = useProfile()
-  const tz = profile?.timezone ?? 'UTC'
+  const tz = profile?.timezone ?? localTz()
   const { data: appCheck = {} } = useAppOpenCheck(tz)
   const { missedDays = 0, lastActivityDate } = appCheck
   const { data: goals = [], isLoading: goalsLoading } = useGoals()

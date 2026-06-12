@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '../lib/supabase.js'
-import { todayLocal, previousDay } from '../utils/dateUtils.js'
+import { todayLocal, previousDay, dateRange } from '../utils/dateUtils.js'
 
 const cutoffDate = (tz) => previousDay(previousDay(previousDay(todayLocal(tz))))
 
@@ -37,6 +37,27 @@ export function useTasksForDate(date, tz) {
   })
 }
 
+export function useTasksForRange(startDate, endDate, tz) {
+  return useQuery({
+    queryKey: ['tasks', 'range', startDate, endDate],
+    queryFn: async () => {
+      const { data: tasks, error } = await supabase.from('tasks').select('*')
+        .gte('planned_date', startDate).lte('planned_date', endDate).eq('archived', false)
+      if (error) throw error
+      const today = todayLocal(tz)
+      let all = tasks ?? []
+      for (const date of dateRange(startDate, endDate)) {
+        if (date > today) continue
+        const forDate = all.filter((t) => t.planned_date === date)
+        const generated = await generateRecurring(date, forDate, tz)
+        all = [...all, ...generated.slice(forDate.length)]
+      }
+      return all
+    },
+    enabled: Boolean(startDate && endDate),
+  })
+}
+
 export function useAddTask() {
   const qc = useQueryClient()
   return useMutation({
@@ -46,19 +67,19 @@ export function useAddTask() {
       if (error) throw error
       return data
     },
-    onSuccess: (data) => qc.invalidateQueries({ queryKey: ['tasks', data.planned_date] }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['tasks'] }),
   })
 }
 
 export function useUpdateTask() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: async ({ id, planned_date, ...changes }) => {
+    mutationFn: async ({ id, ...changes }) => {
       const { data, error } = await supabase.from('tasks').update(changes).eq('id', id).select().single()
       if (error) throw error
       return data
     },
-    onSuccess: (_, { planned_date }) => qc.invalidateQueries({ queryKey: ['tasks', planned_date] }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['tasks'] }),
   })
 }
 
@@ -92,7 +113,7 @@ export function useDeleteTask() {
       const { error } = await supabase.from('tasks').delete().eq('id', id)
       if (error) throw error
     },
-    onSuccess: (_, { planned_date }) => qc.invalidateQueries({ queryKey: ['tasks', planned_date] }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['tasks'] }),
   })
 }
 

@@ -1,0 +1,120 @@
+/* Dark-theme overrides for react-big-calendar. Loaded AFTER the base CSS. */
+.rbc-calendar {
+  color: #d1d5db;
+  background: transparent;
+}
+
+/* Hide default toolbar — we render a custom one */
+.rbc-toolbar {
+  display: none;
+}
+
+/* Headers (day-of-week row) */
+.rbc-header {
+  background: #1f2937;
+  color: #9ca3af;
+  border-color: #374151;
+  font-weight: 500;
+  font-size: 0.75rem;
+  padding: 6px 4px;
+}
+.rbc-header + .rbc-header {
+  border-left: 1px solid #374151;
+}
+
+/* Time views & containers */
+.rbc-time-view,
+.rbc-time-header,
+.rbc-time-header-content,
+.rbc-time-content,
+.rbc-month-view {
+  border-color: #374151;
+  background: #111827;
+}
+.rbc-time-view {
+  border-radius: 0.75rem;
+  overflow: hidden;
+}
+
+/* Gutter (left time labels) */
+.rbc-time-gutter,
+.rbc-time-gutter .rbc-timeslot-group {
+  color: #6b7280;
+  font-size: 0.7rem;
+}
+
+/* Slot grid lines — thin, low contrast */
+.rbc-timeslot-group {
+  border-color: #1f2937;
+}
+.rbc-time-content > * + * > * {
+  border-color: #1f2937;
+}
+.rbc-day-slot .rbc-time-slot {
+  border-color: transparent;
+}
+.rbc-time-content,
+.rbc-time-header-content,
+.rbc-day-slot,
+.rbc-time-column {
+  border-color: #374151;
+}
+.rbc-time-header.rbc-overflowing,
+.rbc-time-header-content > .rbc-row {
+  border-color: #374151;
+}
+
+/* All-day (freeform chips) row */
+.rbc-allday-cell {
+  background: #0f1623;
+  border-color: #374151;
+}
+.rbc-row-bg .rbc-day-bg {
+  border-color: #1f2937;
+}
+
+/* Today column — subtle highlight, not bright yellow */
+.rbc-today {
+  background: rgba(168, 85, 247, 0.08);
+}
+
+/* Events — rounded, no default blue */
+.rbc-event,
+.rbc-day-slot .rbc-event {
+  background: #7f77dd;
+  border: none;
+  border-radius: 6px;
+  padding: 2px 6px;
+  font-size: 0.72rem;
+  box-shadow: none;
+}
+.rbc-event:focus {
+  outline: 2px solid rgba(255, 255, 255, 0.4);
+}
+.rbc-event-label {
+  font-size: 0.65rem;
+  opacity: 0.85;
+}
+.rbc-event.rbc-selected,
+.rbc-day-slot .rbc-event.rbc-selected {
+  background: #7f77dd;
+}
+
+/* Current-time indicator — clear red line */
+.rbc-current-time-indicator {
+  background-color: #ef4444;
+  height: 2px;
+}
+
+/* Slot selection feedback */
+.rbc-slot-selection {
+  background: rgba(168, 85, 247, 0.25);
+  border-radius: 4px;
+  color: #fff;
+}
+
+/* Off-range / show-more */
+.rbc-show-more {
+  color: #a855f7;
+  background: transparent;
+}

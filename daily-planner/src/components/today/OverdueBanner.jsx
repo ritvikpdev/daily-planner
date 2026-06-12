@@ -1,8 +1,12 @@
 import { useOverdueTasks, useToggleDone, useUpdateTask } from '../../hooks/useTasks.js'
+import { useGoals } from '../../hooks/useGoals.js'
 import { formatDisplay } from '../../utils/dateUtils.js'
 
 export function OverdueBanner({ tz, today }) {
-  const { data: tasks = [] } = useOverdueTasks(tz)
+  const { data: rawTasks = [] } = useOverdueTasks(tz)
+  const { data: goals = [] } = useGoals()
+  const activeIds = new Set(goals.filter((g) => g.status === 'active').map((g) => g.id))
+  const tasks = rawTasks.filter((t) => activeIds.has(t.goal_id))
   const { mutate: toggle } = useToggleDone()
   const { mutate: move } = useUpdateTask()
 

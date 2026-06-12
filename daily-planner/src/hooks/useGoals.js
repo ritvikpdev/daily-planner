@@ -52,16 +52,17 @@ export function useSetGoalStatus() {
     mutationFn: async ({ id, status, completion_note }) => {
       const patch = { status, completion_note: completion_note ?? null }
       if (status === 'completed') patch.completed_at = new Date().toISOString()
-      const { data, error } = await supabase
-        .from('goals')
-        .update(patch)
-        .eq('id', id)
-        .select()
-        .single()
+      const { data, error } = await supabase.from('goals').update(patch).eq('id', id).select().single()
       if (error) throw error
+      if (status === 'archived' || status === 'completed') {
+        await supabase.from('tasks').update({ archived: true }).eq('goal_id', id).eq('archived', false)
+      }
       return data
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['goals'] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['goals'] })
+      qc.invalidateQueries({ queryKey: ['tasks'] })
+    },
   })
 }
 

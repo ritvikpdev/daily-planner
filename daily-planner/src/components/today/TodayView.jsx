@@ -5,7 +5,7 @@ import { MissedDayBanner } from '../reminders/MissedDayBanner.jsx'
 import { CheckInCard } from '../reminders/CheckInCard.jsx'
 import { useGoals } from '../../hooks/useGoals.js'
 import { supabase } from '../../lib/supabase.js'
-import { todayLocal, formatDisplay } from '../../utils/dateUtils.js'
+import { todayLocal, formatDisplay, localTz } from '../../utils/dateUtils.js'
 import { currentStreak } from '../../utils/streakCalculator.js'
 import { GoalSection } from './GoalSection.jsx'
 import { OverdueBanner } from './OverdueBanner.jsx'
@@ -39,7 +39,7 @@ function useStreaks(goalIds, tz) {
 export function TodayView({ missedDays = 0, lastActivityDate, onGoToReview, onNavigate = () => {} }) {
   const { data: profile } = useProfile()
   const { data: goals = [], isLoading: goalsLoading, isError: goalsError, refetch: refetchGoals } = useGoals()
-  const tz = profile?.timezone ?? 'UTC'
+  const tz = profile?.timezone ?? localTz()
   const today = todayLocal(tz)
   const { data: todayTasks = [] } = useTasksForDate(today, tz)
   const active = goals.filter((g) => g.status === 'active')

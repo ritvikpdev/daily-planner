@@ -20,6 +20,10 @@ function toNoonUTC(dateStr) {
   return new Date(Date.UTC(year, month - 1, day, 12, 0, 0))
 }
 
+export function localTz() {
+  return Intl.DateTimeFormat().resolvedOptions().timeZone
+}
+
 export function todayLocal(tz) {
   return toLocalDateStr(new Date(), tz)
 }

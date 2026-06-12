@@ -1,23 +1,26 @@
 import { useState } from 'react'
 import { useProfile } from '../../hooks/useProfile.js'
 import { useGoals } from '../../hooks/useGoals.js'
-import { todayLocal, weekBounds, addDays, formatWeekRange } from '../../utils/dateUtils.js'
+import { todayLocal, weekBounds, addDays, formatWeekRange, localTz } from '../../utils/dateUtils.js'
 import { DateSelector } from './DateSelector.jsx'
 import { DayDetail } from './DayDetail.jsx'
 import { WeekStrip } from './WeekStrip.jsx'
+import { CalendarView } from './CalendarView.jsx'
 
 const pill = (on) => `px-3 py-1 rounded-full text-xs font-medium border transition-colors ${on ? 'bg-purple-600 border-purple-600 text-white' : 'border-gray-700/50 bg-gray-800 text-gray-400 hover:text-gray-200'}`
 const iconBtn = 'w-7 h-7 flex items-center justify-center rounded-full bg-gray-800 border border-gray-700/50 text-gray-400 hover:text-gray-200 transition-colors text-base leading-none'
+const seg = (on) => `px-3 py-1 text-xs rounded-md transition-colors ${on ? 'bg-purple-600 text-white' : 'text-gray-400 hover:text-gray-200'}`
 
 export function PlanView() {
   const { data: profile } = useProfile()
   const { data: goals = [] } = useGoals()
-  const tz = profile?.timezone ?? 'UTC'
+  const tz = profile?.timezone ?? localTz()
   const today = todayLocal(tz)
   const [selected, setSelected] = useState(today)
   const [mode, setMode] = useState('single')
   const [goalFilter, setGoalFilter] = useState(null)
   const [weekAnchor, setWeekAnchor] = useState(today)
+  const [planView, setPlanView] = useState('list')
   const active = goals.filter((g) => g.status === 'active')
   const { monday, sunday } = weekBounds(weekAnchor)
   const todayMonday = weekBounds(today).monday
@@ -29,6 +32,15 @@ export function PlanView() {
 
   return (
     <div className="p-4 flex flex-col gap-4 max-w-5xl mx-auto">
+      <div className="flex items-center justify-between">
+        <h2 className="text-white font-medium text-lg">Plan</h2>
+        <div className="flex gap-1 bg-gray-800 border border-gray-700/50 rounded-lg p-0.5">
+          <button onClick={() => setPlanView('list')} className={seg(planView === 'list')}>☰ List</button>
+          <button onClick={() => setPlanView('calendar')} className={seg(planView === 'calendar')}>◫ Calendar</button>
+        </div>
+      </div>
+
+      {planView === 'calendar' ? <CalendarView /> : <>
       <DateSelector selected={selected} mode={mode} onSelect={handleSelect} tz={tz} />
 
       {mode === 'week' && (
@@ -57,6 +69,7 @@ export function PlanView() {
         ? <WeekStrip monday={monday} sunday={sunday} tz={tz} goals={goals} goalFilter={goalFilter}
             onDrillDown={(date) => { setMode('single'); setSelected(date); setWeekAnchor(weekBounds(date).monday) }} />
         : <DayDetail date={selected} tz={tz} goals={goals} goalFilter={goalFilter} />}
+      </>}
     </div>
   )
 }

@@ -1,7 +1,7 @@
 import { useProfile } from '../../hooks/useProfile.js'
 import { useGoals } from '../../hooks/useGoals.js'
 import { useStreaks, useAllTasks } from '../../hooks/useStreaks.js'
-import { todayLocal, weekBounds, formatDisplay } from '../../utils/dateUtils.js'
+import { todayLocal, weekBounds, formatDisplay, localTz } from '../../utils/dateUtils.js'
 import { StreakBoard } from './StreakBoard.jsx'
 import { GoalHeatmap } from './GoalHeatmap.jsx'
 import { SkeletonRow } from '../shared/SkeletonRow.jsx'
@@ -13,7 +13,7 @@ const HEX = { purple:'#a855f7', teal:'#14b8a6', amber:'#f59e0b', blue:'#3b82f6',
 export function ProgressView() {
   const { data: profile } = useProfile()
   const { data: goals = [] } = useGoals()
-  const tz = profile?.timezone ?? 'UTC'
+  const tz = profile?.timezone ?? localTz()
   const today = todayLocal(tz)
   const { data: streaks = {} } = useStreaks(tz)
   const { data: allTasks = [], isLoading, isError: tasksError, refetch: refetchTasks } = useAllTasks()
