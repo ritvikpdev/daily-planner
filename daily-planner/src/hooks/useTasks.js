@@ -30,8 +30,7 @@ export function useTasksForDate(date, tz) {
     queryFn: async () => {
       const { data: tasks, error } = await supabase.from('tasks').select('*').eq('planned_date', date).eq('archived', false)
       if (error) throw error
-      if (date <= todayLocal(tz)) return generateRecurring(date, tasks ?? [], tz)
-      return tasks ?? []
+      return generateRecurring(date, tasks ?? [], tz)
     },
     enabled: Boolean(date),
   })
