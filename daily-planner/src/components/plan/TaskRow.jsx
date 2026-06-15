@@ -25,12 +25,15 @@ export function TaskRow({ task, goalColor, isEditing, onEdit, onToggle, onDelete
     <div className={`${bar} border-b border-gray-700/30`}>
       <div className="flex items-center gap-2 py-2 px-3 group">
         <button onClick={onToggle}
+          title={task.done ? 'Mark undone' : 'Mark done'}
           className={`w-3.5 h-3.5 border rounded flex-shrink-0 transition-colors
             ${task.done ? 'bg-purple-600 border-purple-600' : 'border-gray-600 hover:border-purple-400'}`} />
         <span className={`text-sm flex-1 leading-snug ${task.done ? 'line-through text-gray-600' : 'text-gray-200'}`}>
           {task.title}
         </span>
-        {task.is_recurring && <RepeatSvg />}
+        {task.is_recurring && (
+          <span title="Recurring task"><RepeatSvg /></span>
+        )}
         {task.mode === 'structured' && task.start_time && (
           <span className="text-xs text-gray-500 flex-shrink-0"
             style={{ fontFamily: "'JetBrains Mono', monospace" }}>
@@ -38,18 +41,22 @@ export function TaskRow({ task, goalColor, isEditing, onEdit, onToggle, onDelete
           </span>
         )}
         <button onClick={onEdit}
+          title={isEditing ? 'Close editor' : 'Edit task'}
           className="opacity-0 group-hover:opacity-100 text-gray-500 hover:text-gray-200 transition-opacity flex-shrink-0">
           <PencilSvg />
         </button>
-        <button onClick={onDelete}
-          className="opacity-0 group-hover:opacity-100 text-gray-700 hover:text-red-400 text-xs flex-shrink-0">
+        {/* When editor is open, × closes it; when closed, × archives (removes) the task */}
+        <button
+          onClick={isEditing ? onEdit : onDelete}
+          title={isEditing ? 'Close editor' : 'Delete task'}
+          className="opacity-0 group-hover:opacity-100 text-gray-700 hover:text-red-400 text-sm leading-none flex-shrink-0">
           ×
         </button>
       </div>
       {isEditing && (
         <div className="px-3 pb-3">
           <TaskEditor task={task} onSave={onSave} onClose={onEdit}
-            onDelete={() => { onDelete(); onEdit() }}
+            onDelete={onDelete}
             onStop={onStop} onMakeRecurring={onMakeRecurring} />
         </div>
       )}

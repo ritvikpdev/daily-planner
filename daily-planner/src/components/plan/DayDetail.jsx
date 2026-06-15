@@ -1,7 +1,8 @@
 import { useState } from 'react'
-import { useTasksForDate, useToggleDone, useDeleteTask, useUpdateTask } from '../../hooks/useTasks.js'
-import { useUpdateRecurring, useAddRecurring } from '../../hooks/useRecurring.js'
+import { useTasksForDate, useToggleDone, useUpdateTask } from '../../hooks/useTasks.js'
+import { useStopRecurringFrom, useAddRecurring } from '../../hooks/useRecurring.js'
 import { useToast } from '../shared/Toast.jsx'
+import { isoToLocalDate } from '../../utils/dateUtils.js'
 import { DayTimeline } from './DayTimeline.jsx'
 import { TaskRow } from './TaskRow.jsx'
 import { AddTaskForm } from './AddTaskForm.jsx'
@@ -11,9 +12,8 @@ const DOT = { purple:'bg-purple-500',teal:'bg-teal-500',amber:'bg-amber-500',blu
 function GoalBlock({ goal, date, tz }) {
   const { data: all = [] } = useTasksForDate(date, tz)
   const { mutate: toggle } = useToggleDone()
-  const { mutate: remove } = useDeleteTask()
   const { mutate: update } = useUpdateTask()
-  const { mutate: stopRec } = useUpdateRecurring()
+  const { mutate: stopFrom } = useStopRecurringFrom()
   const { mutate: makeRec } = useAddRecurring()
   const { showToast } = useToast()
   const [editId, setEditId] = useState(null)
@@ -21,14 +21,11 @@ function GoalBlock({ goal, date, tz }) {
 
   const toggleEdit = (id) => setEditId((p) => (p === id ? null : id))
   const save = (ch) => { update(ch); setEditId(null) }
-  const stop = (t) => stopRec({ id: t.recurring_id, active: false },
-    { onSuccess: () => {
-      update({ id: t.id, is_recurring: false, recurring_id: null })
-      showToast('Stopped — won\'t generate from tomorrow.', 'success')
-      setEditId(null)
-    }})
+  const stop = (t) => stopFrom({ id: t.recurring_id, goal_id: t.goal_id, from_date: t.planned_date },
+    { onSuccess: () => { showToast('Stopped — won\'t generate from tomorrow.', 'success'); setEditId(null) } })
   const promote = (t, ch) => makeRec(
-    { goal_id: t.goal_id, title: ch.title, default_mode: ch.mode, default_start: ch.start_time ?? null, default_end: ch.end_time ?? null },
+    { goal_id: t.goal_id, title: ch.title, default_mode: ch.mode, default_start: ch.start_time ?? null,
+      default_end: ch.end_time ?? null, start_date: ch.start_date ?? null, end_date: ch.end_date ?? null },
     { onSuccess: (tpl) => { update({ ...ch, id: t.id, recurring_id: tpl.id, is_recurring: true }); setEditId(null) } })
 
   return (
@@ -42,7 +39,7 @@ function GoalBlock({ goal, date, tz }) {
           <TaskRow key={t.id} task={t} goalColor={goal.color} isEditing={editId === t.id}
             onEdit={() => toggleEdit(t.id)}
             onToggle={() => toggle({ id: t.id, planned_date: t.planned_date, currentDone: t.done })}
-            onDelete={() => remove({ id: t.id, planned_date: t.planned_date })}
+            onDelete={() => update({ id: t.id, archived: true })}
             onSave={save} onStop={() => stop(t)} onMakeRecurring={(ch) => promote(t, ch)} />
         ))}
       </div>
@@ -53,7 +50,9 @@ function GoalBlock({ goal, date, tz }) {
 
 export function DayDetail({ date, tz, goals, goalFilter }) {
   const { data: all = [], isLoading } = useTasksForDate(date, tz)
-  const active = goals.filter((g) => g.status === 'active' && (!goalFilter || g.id === goalFilter))
+  const active = goals.filter((g) =>
+    g.status === 'active' && (!goalFilter || g.id === goalFilter) && isoToLocalDate(g.created_at, tz) <= date
+  )
   const structured = all.filter((t) => t.mode === 'structured' && t.start_time && t.end_time
     && (!goalFilter || t.goal_id === goalFilter) && active.some((g) => g.id === t.goal_id))
   return (

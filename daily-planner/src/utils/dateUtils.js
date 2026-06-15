@@ -24,6 +24,11 @@ export function localTz() {
   return Intl.DateTimeFormat().resolvedOptions().timeZone
 }
 
+// Converts a UTC ISO timestamp to a YYYY-MM-DD string in the given timezone.
+export function isoToLocalDate(isoString, tz) {
+  return new Intl.DateTimeFormat('en-CA', { timeZone: tz }).format(new Date(isoString))
+}
+
 export function todayLocal(tz) {
   return toLocalDateStr(new Date(), tz)
 }

@@ -1,9 +1,10 @@
 import { useState } from 'react'
 import { ModeToggle } from './ModeToggle.jsx'
 import { validateTitle, validateTimeSlot } from '../../utils/validators.js'
-import { formatDisplay } from '../../utils/dateUtils.js'
+import { formatDisplay, addDays } from '../../utils/dateUtils.js'
 
 const inp = 'bg-gray-700 text-white text-sm rounded px-2 py-1.5 outline-none focus:ring-1 focus:ring-purple-500'
+const qbtn = 'text-xs bg-gray-600 hover:bg-gray-500 text-gray-300 px-2 py-0.5 rounded transition-colors flex-shrink-0'
 
 export function TaskEditor({ task, onSave, onDelete, onClose, onStop, onMakeRecurring }) {
   const [title, setTitle] = useState(task.title)
@@ -12,6 +13,8 @@ export function TaskEditor({ task, onSave, onDelete, onClose, onStop, onMakeRecu
   const [start, setStart] = useState(task.start_time ?? '')
   const [end, setEnd] = useState(task.end_time ?? '')
   const [makeRecurring, setMakeRecurring] = useState(false)
+  const [recStart, setRecStart] = useState(task.planned_date)
+  const [recEnd, setRecEnd] = useState('')
   const [stopConfirm, setStopConfirm] = useState(false)
   const [errors, setErrors] = useState({})
 
@@ -19,10 +22,14 @@ export function TaskEditor({ task, onSave, onDelete, onClose, onStop, onMakeRecu
     const errs = {}
     const tv = validateTitle(title); if (!tv.valid) errs.title = tv.error
     if (mode === 'structured') { const sv = validateTimeSlot(start, end); if (!sv.valid) errs.time = sv.error }
+    if (makeRecurring) {
+      if (!recEnd) errs.rec = 'End date is required'
+      else if (recEnd < recStart) errs.rec = 'End date must be after start date'
+    }
     if (Object.keys(errs).length) return setErrors(errs)
     const changes = { ...task, title, mode, planned_date: date,
       start_time: mode === 'structured' ? start : null, end_time: mode === 'structured' ? end : null }
-    if (makeRecurring && onMakeRecurring) onMakeRecurring(changes)
+    if (makeRecurring && onMakeRecurring) onMakeRecurring({ ...changes, start_date: recStart, end_date: recEnd })
     else onSave(changes)
   }
 
@@ -37,7 +44,7 @@ export function TaskEditor({ task, onSave, onDelete, onClose, onStop, onMakeRecu
                 ■ Stop recurring
               </button>
             : <div className="flex flex-col gap-1">
-                <p className="text-gray-400">Stop generating this task from tomorrow? Past and existing days are unaffected.</p>
+                <p className="text-gray-400">Stop recurring? Today's instance stays; all future ones will be removed.</p>
                 <div className="flex gap-3">
                   <button onClick={onStop} className="text-red-400 hover:text-red-300">Confirm</button>
                   <button onClick={() => setStopConfirm(false)} className="text-gray-500 hover:text-gray-300">Cancel</button>
@@ -63,10 +70,22 @@ export function TaskEditor({ task, onSave, onDelete, onClose, onStop, onMakeRecu
       {errors.time && <p className="text-red-400 text-xs -mt-2">{errors.time}</p>}
 
       {!task.is_recurring && (
-        <label className="flex items-center gap-2 text-xs text-gray-400 cursor-pointer">
-          <input type="checkbox" checked={makeRecurring} onChange={(e) => setMakeRecurring(e.target.checked)} />
-          Repeat this daily
-        </label>
+        <div className="flex flex-col gap-1.5">
+          <label className="flex items-center gap-2 text-xs text-gray-400 cursor-pointer">
+            <input type="checkbox" checked={makeRecurring} onChange={(e) => setMakeRecurring(e.target.checked)} />
+            Repeat this daily
+          </label>
+          {makeRecurring && (
+            <div className="flex items-center gap-2 flex-wrap">
+              <button type="button" onClick={() => { setRecStart(task.planned_date); setRecEnd(addDays(task.planned_date, 6)) }} className={qbtn}>Week</button>
+              <button type="button" onClick={() => { setRecStart(task.planned_date); setRecEnd(addDays(task.planned_date, 29)) }} className={qbtn}>Month</button>
+              <input type="date" value={recStart} onChange={(e) => setRecStart(e.target.value)} className={`${inp} text-xs`} />
+              <span className="text-gray-500 text-xs">→</span>
+              <input type="date" value={recEnd} onChange={(e) => setRecEnd(e.target.value)} className={`${inp} text-xs`} />
+            </div>
+          )}
+          {errors.rec && <p className="text-red-400 text-xs">{errors.rec}</p>}
+        </div>
       )}
 
       <div className="flex justify-between pt-0.5">

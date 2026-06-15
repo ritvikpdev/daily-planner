@@ -1,39 +1,22 @@
 import { useState } from 'react'
-import { useQuery } from '@tanstack/react-query'
 import { useProfile } from '../../hooks/useProfile.js'
 import { MissedDayBanner } from '../reminders/MissedDayBanner.jsx'
 import { CheckInCard } from '../reminders/CheckInCard.jsx'
 import { useGoals } from '../../hooks/useGoals.js'
-import { supabase } from '../../lib/supabase.js'
 import { todayLocal, formatDisplay, localTz } from '../../utils/dateUtils.js'
-import { currentStreak } from '../../utils/streakCalculator.js'
 import { GoalSection } from './GoalSection.jsx'
 import { OverdueBanner } from './OverdueBanner.jsx'
 import { StreakChip } from '../shared/StreakChip.jsx'
 import { EmptyState } from '../shared/EmptyState.jsx'
 import { SkeletonRow } from '../shared/SkeletonRow.jsx'
 import { useTasksForDate } from '../../hooks/useTasks.js'
+import { useStreaks } from '../../hooks/useStreaks.js'
 
 export const GOAL_HEX = { purple:'#a855f7', teal:'#14b8a6', amber:'#f59e0b', blue:'#3b82f6', coral:'#f97316', green:'#22c55e' }
 
 function greet() {
   const h = new Date().getHours()
   return h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening'
-}
-
-function useStreaks(goalIds, tz) {
-  return useQuery({
-    queryKey: ['streaks', goalIds.join(',')],
-    queryFn: async () => {
-      if (!goalIds.length) return {}
-      const { data = [] } = await supabase.from('tasks')
-        .select('goal_id, planned_date, done').in('goal_id', goalIds)
-      return Object.fromEntries(
-        goalIds.map((id) => [id, currentStreak(data.filter((t) => t.goal_id === id), tz)])
-      )
-    },
-    enabled: goalIds.length > 0,
-  })
 }
 
 export function TodayView({ missedDays = 0, lastActivityDate, onGoToReview, onNavigate = () => {} }) {
@@ -43,7 +26,7 @@ export function TodayView({ missedDays = 0, lastActivityDate, onGoToReview, onNa
   const today = todayLocal(tz)
   const { data: todayTasks = [] } = useTasksForDate(today, tz)
   const active = goals.filter((g) => g.status === 'active')
-  const { data: streaks = {} } = useStreaks(active.map((g) => g.id), tz)
+  const { data: streaks = {} } = useStreaks(tz)
   const name = profile?.display_name
   const [cardDone, setCardDone] = useState(() => sessionStorage.getItem('checkin_done') === 'true')
 

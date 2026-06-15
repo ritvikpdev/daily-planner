@@ -11,10 +11,17 @@ function createdAtLocalDate(isoString, tz) {
 async function generateRecurring(date, tasks, tz) {
   const { data: { user } } = await supabase.auth.getUser()
   const { data: tpl = [] } = await supabase.from('recurring_tasks').select('*').eq('user_id', user.id).eq('active', true)
-  const seen = new Set(tasks.map((t) => t.recurring_id).filter(Boolean))
-  // Only generate an instance for a template if the template existed on `date`
-  // (i.e. its created_at local date is on or before `date`).
-  const missing = tpl.filter((t) => !seen.has(t.id) && createdAtLocalDate(t.created_at, tz) <= date)
+  // Include archived instances in `seen` so that soft-deleted (dismissed) recurring tasks
+  // are not regenerated when the query refetches.
+  const { data: archived = [] } = await supabase.from('tasks').select('recurring_id')
+    .eq('planned_date', date).eq('user_id', user.id).eq('archived', true).not('recurring_id', 'is', null)
+  const seen = new Set([...tasks.map((t) => t.recurring_id), ...archived.map((t) => t.recurring_id)].filter(Boolean))
+  const missing = tpl.filter((t) => {
+    if (seen.has(t.id)) return false
+    const start = t.start_date ?? createdAtLocalDate(t.created_at, tz)
+    const end = t.end_date ?? '9999-12-31'
+    return start <= date && end >= date
+  })
   if (!missing.length) return tasks
   const { data: added = [] } = await supabase.from('tasks').insert(missing.map((t) => ({
     user_id: user.id, goal_id: t.goal_id, title: t.title, mode: t.default_mode,
@@ -101,7 +108,8 @@ export function useToggleDone() {
       return { prev }
     },
     onError: (_, { planned_date }, ctx) => qc.setQueryData(['tasks', planned_date], ctx.prev),
-    onSettled: (_, __, { planned_date }) => qc.invalidateQueries({ queryKey: ['tasks', planned_date] }),
+    // Invalidate broadly so overdue banner, streaks, progress, and week-range views all stay in sync.
+    onSettled: () => qc.invalidateQueries({ queryKey: ['tasks'] }),
   })
 }
 

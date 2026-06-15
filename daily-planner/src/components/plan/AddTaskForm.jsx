@@ -3,9 +3,11 @@ import { useAddTask } from '../../hooks/useTasks.js'
 import { useAddRecurring } from '../../hooks/useRecurring.js'
 import { validateTitle, validateTimeSlot } from '../../utils/validators.js'
 import { ModeToggle } from './ModeToggle.jsx'
+import { addDays } from '../../utils/dateUtils.js'
 
 const inp = 'border border-gray-700/50 bg-gray-800 text-white text-sm rounded-lg px-3 py-1.5 outline-none focus:ring-1 focus:ring-purple-500'
 const chk = 'flex items-center gap-1.5 text-xs text-gray-400 cursor-pointer select-none'
+const qbtn = 'text-xs bg-gray-700 hover:bg-gray-600 text-gray-300 px-2 py-1 rounded transition-colors flex-shrink-0'
 
 export function AddTaskForm({ goal, date }) {
   const { mutate: add } = useAddTask()
@@ -16,17 +18,24 @@ export function AddTaskForm({ goal, date }) {
   const [start, setStart] = useState('')
   const [end, setEnd] = useState('')
   const [recurring, setRecurring] = useState(false)
+  const [recStart, setRecStart] = useState(date)
+  const [recEnd, setRecEnd] = useState('')
   const [more, setMore] = useState(false)
   const [err, setErr] = useState({})
 
   function submit() {
     const tv = validateTitle(title); if (!tv.valid) return setErr({ t: tv.error })
     if (mode === 'structured') { const sv = validateTimeSlot(start, end); if (!sv.valid) return setErr({ s: sv.error }) }
+    if (recurring) {
+      if (!recEnd) return setErr({ rec: 'End date is required for recurring tasks' })
+      if (recEnd < recStart) return setErr({ rec: 'End date must be after start date' })
+    }
     const fields = { goal_id: goal.id, title, mode, planned_date: date,
       start_time: mode === 'structured' ? start : null, end_time: mode === 'structured' ? end : null }
     const done = () => { setTitle(''); setErr({}); if (!more) setOpen(false) }
     if (recurring) {
-      makeRec({ goal_id: goal.id, title, default_mode: mode, default_start: fields.start_time, default_end: fields.end_time },
+      makeRec({ goal_id: goal.id, title, default_mode: mode, default_start: fields.start_time,
+                default_end: fields.end_time, start_date: recStart, end_date: recEnd },
         { onSuccess: (tpl) => add({ ...fields, is_recurring: true, recurring_id: tpl.id }, { onSuccess: done }) })
     } else {
       add(fields, { onSuccess: done })
@@ -63,6 +72,18 @@ export function AddTaskForm({ goal, date }) {
           Create more
         </label>
       </div>
+      {recurring && (
+        <div className="flex flex-col gap-1">
+          <div className="flex items-center gap-2 flex-wrap">
+            <button type="button" onClick={() => { setRecStart(date); setRecEnd(addDays(date, 6)) }} className={qbtn}>Week</button>
+            <button type="button" onClick={() => { setRecStart(date); setRecEnd(addDays(date, 29)) }} className={qbtn}>Month</button>
+            <input type="date" value={recStart} onChange={(e) => setRecStart(e.target.value)} className={`${inp} text-xs py-1`} />
+            <span className="text-gray-500 text-xs">→</span>
+            <input type="date" value={recEnd} onChange={(e) => setRecEnd(e.target.value)} className={`${inp} text-xs py-1`} />
+          </div>
+          {err.rec && <p className="text-red-400 text-xs">{err.rec}</p>}
+        </div>
+      )}
       {(err.t || err.s) && <p className="text-red-400 text-xs">{err.t ?? err.s}</p>}
     </div>
   )

@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useTasksForDate, useAddTask, useToggleDone } from '../../hooks/useTasks.js'
-import { todayLocal, dateRange } from '../../utils/dateUtils.js'
+import { todayLocal, dateRange, isoToLocalDate } from '../../utils/dateUtils.js'
 
 const DOT = { purple:'bg-purple-500',teal:'bg-teal-500',amber:'bg-amber-500',blue:'bg-blue-500',coral:'bg-orange-500',green:'bg-green-500' }
 const DAY = (d) => new Date(d + 'T12:00:00Z').toLocaleDateString('en-US', { weekday: 'short', timeZone: 'UTC' })
@@ -17,7 +17,7 @@ function DayCell({ date, today, goals, goalFilter, tz, onDrillDown }) {
     goals.find((g) => g.id === t.goal_id)?.status === 'active'
   )
   const isToday = date === today
-  const firstGoalId = goalFilter ?? goals.find((g) => g.status === 'active')?.id
+  const firstGoalId = goalFilter ?? goals.find((g) => g.status === 'active' && isoToLocalDate(g.created_at, tz) <= date)?.id
   const dot = (goalId) => DOT[goals.find((g) => g.id === goalId)?.color] ?? DOT.purple
 
   function add() {
